@@ -1,27 +1,36 @@
 use std::io;
-use std::io::{Error as IOError,ErrorKind,Read,Write};
-use std::net::{UdpSocket,TcpStream,ToSocketAddrs};
+use std::io::{Error as IOError, ErrorKind, Read, Write};
+use std::net::{TcpStream, ToSocketAddrs, UdpSocket};
 use std::time::Duration;
 
 pub fn send_udp_message(target: &str, message: &[u8]) -> io::Result<usize> {
     for port in 1025..=65535 {
-        let maybe_socket = UdpSocket::bind(("0.0.0.0", port))
-            .and_then(|s| s.set_broadcast(true).map(|_| s));
+        let maybe_socket =
+            UdpSocket::bind(("0.0.0.0", port)).and_then(|s| s.set_broadcast(true).map(|_| s));
         match maybe_socket {
             Ok(s) => return s.send_to(message, (target, 9)),
             Err(e) if e.kind() == ErrorKind::AddrInUse => continue,
-            Err(e) => return Err(e)
+            Err(e) => return Err(e),
         };
     }
 
-    Err(IOError::new(ErrorKind::AddrNotAvailable, "No address available (tried 0.0.0.0 from ports 1025 to 65535)"))
+    Err(IOError::new(
+        ErrorKind::AddrNotAvailable,
+        "No address available (tried 0.0.0.0 from ports 1025 to 65535)",
+    ))
 }
 
-pub fn send_and_receive_tcp_message(target: impl ToSocketAddrs, message: &[u8]) -> io::Result<Vec<u8>> {
-    let target_socket_address = target.to_socket_addrs()?.next()
-        .ok_or(IOError::new(ErrorKind::InvalidInput, "message target address is empty"))?;
+pub fn send_and_receive_tcp_message(
+    target: impl ToSocketAddrs,
+    message: &[u8],
+) -> io::Result<Vec<u8>> {
+    let target_socket_address = target.to_socket_addrs()?.next().ok_or(IOError::new(
+        ErrorKind::InvalidInput,
+        "message target address is empty",
+    ))?;
 
-    let mut tcp_stream = TcpStream::connect_timeout(&target_socket_address, Duration::from_secs(15))?;
+    let mut tcp_stream =
+        TcpStream::connect_timeout(&target_socket_address, Duration::from_secs(15))?;
     tcp_stream.set_read_timeout(Some(Duration::from_secs(3)))?;
     tcp_stream.set_write_timeout(Some(Duration::from_secs(3)))?;
     tcp_stream.write_all(message)?;

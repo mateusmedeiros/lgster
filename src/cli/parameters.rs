@@ -1,12 +1,12 @@
+use clap::{App, AppSettings, Arg, ArgMatches};
 use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
-use clap::{App, AppSettings, Arg, ArgMatches};
 
-use super::commands::{Command, generate_clap_subcommands};
+use super::commands::{generate_clap_subcommands, Command};
 use super::convert::FixedSizeByteSequenceParameter;
 
-fn get_matches<'a, T: IntoIterator<Item=App<'a, 'a>>>(subcommands: T) -> ArgMatches<'a> {
+fn get_matches<'a, T: IntoIterator<Item = App<'a, 'a>>>(subcommands: T) -> ArgMatches<'a> {
     App::new("lgster")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::UnifiedHelpMessage)
@@ -128,12 +128,16 @@ pub struct IV(pub FixedSizeByteSequenceParameter);
 #[derive(Debug)]
 pub struct ParseParameterError {
     pub parameter_name: String,
-    source_error: Box<dyn Error>
+    source_error: Box<dyn Error>,
 }
 
 impl fmt::Display for ParseParameterError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Error while converting parameter {} ({})", self.parameter_name, self.source_error)
+        write!(
+            f,
+            "Error while converting parameter {} ({})",
+            self.parameter_name, self.source_error
+        )
     }
 }
 
@@ -150,7 +154,10 @@ impl FromStr for Salt {
         let param = FixedSizeByteSequenceParameter::from_string(s.to_string(), '-', 16);
         match param {
             Ok(p) => Ok(Salt(p)),
-            Err(e) => Err(ParseParameterError { parameter_name: "--salt".to_string(), source_error: e })
+            Err(e) => Err(ParseParameterError {
+                parameter_name: "--salt".to_string(),
+                source_error: e,
+            }),
         }
     }
 }
@@ -162,7 +169,10 @@ impl FromStr for IV {
         let param = FixedSizeByteSequenceParameter::from_string(s.to_string(), '-', 16);
         match param {
             Ok(p) => Ok(IV(p)),
-            Err(e) => Err(ParseParameterError { parameter_name: "--iv".to_string(), source_error: e })
+            Err(e) => Err(ParseParameterError {
+                parameter_name: "--iv".to_string(),
+                source_error: e,
+            }),
         }
     }
 }
@@ -182,19 +192,27 @@ pub struct Parameters<'a> {
 }
 
 impl Parameters<'_> {
-    fn try_from_matches<'a>(matches: ArgMatches<'a>, commands: &'a [Command]) -> Result<Parameters<'a>, ParseParameterError> {
+    fn try_from_matches<'a>(
+        matches: ArgMatches<'a>,
+        commands: &'a [Command],
+    ) -> Result<Parameters<'a>, ParseParameterError> {
         // this is safe to unwrap because it's required so clap will validate that for us
         let keycode: String = matches.value_of("Keycode").unwrap().to_string();
         let host = matches.value_of("Target host").map(str::to_string);
 
         // this is safe to unwrap because it has a default value, even if the user don't specify one
-        let port = matches.value_of("Target port").unwrap().parse::<u16>().map_err(|e|
-            ParseParameterError { parameter_name: "--target-port".to_string(), source_error: Box::new(e) }
-        )?;
+        let port = matches
+            .value_of("Target port")
+            .unwrap()
+            .parse::<u16>()
+            .map_err(|e| ParseParameterError {
+                parameter_name: "--target-port".to_string(),
+                source_error: Box::new(e),
+            })?;
         let salt = Salt::from_str(matches.value_of("Salt").unwrap())?;
         let iv = match matches.value_of("Custom IV") {
             Some(iv_string) => Some(IV::from_str(iv_string)?),
-            None => None
+            None => None,
         };
         let quiet = matches.is_present("Quiet mode");
         let debug = matches.is_present("Debug");
@@ -216,10 +234,21 @@ impl Parameters<'_> {
             .map(String::from)
             .collect();
 
-        Ok(Parameters { keycode, host, port, salt, iv, quiet, debug, command, command_action, command_action_parameters })
+        Ok(Parameters {
+            keycode,
+            host,
+            port,
+            salt,
+            iv,
+            quiet,
+            debug,
+            command,
+            command_action,
+            command_action_parameters,
+        })
     }
 }
 
-pub fn get_parameters<'a>(commands: &'a[Command]) -> Result<Parameters<'a>, ParseParameterError> {
+pub fn get_parameters<'a>(commands: &'a [Command]) -> Result<Parameters<'a>, ParseParameterError> {
     Parameters::try_from_matches(get_matches(generate_clap_subcommands(&commands)), &commands)
 }

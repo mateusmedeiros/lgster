@@ -1,24 +1,39 @@
-use std::convert::TryInto;
-use ::crypto::buffer::{BufferResult,ReadBuffer,RefReadBuffer,RefWriteBuffer,WriteBuffer};
+use ::crypto::aes::{cbc_decryptor, cbc_encryptor, ecb_decryptor, ecb_encryptor, KeySize};
+use ::crypto::blockmodes;
+use ::crypto::buffer::{BufferResult, ReadBuffer, RefReadBuffer, RefWriteBuffer, WriteBuffer};
 use ::crypto::hmac::Hmac;
 use ::crypto::pbkdf2::pbkdf2;
 use ::crypto::sha2::Sha256;
-use ::crypto::aes::{cbc_encryptor,ecb_encryptor,cbc_decryptor,ecb_decryptor,KeySize};
-use ::crypto::blockmodes;
-use ::crypto::symmetriccipher::{Decryptor,Encryptor,SymmetricCipherError};
+use ::crypto::symmetriccipher::{Decryptor, Encryptor, SymmetricCipherError};
+use std::convert::TryInto;
 
 trait CryptoOperator {
-    fn operate(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, eof: bool) -> Result<BufferResult, SymmetricCipherError>;
+    fn operate(
+        &mut self,
+        input: &mut RefReadBuffer,
+        output: &mut RefWriteBuffer,
+        eof: bool,
+    ) -> Result<BufferResult, SymmetricCipherError>;
 }
 
 impl CryptoOperator for Box<dyn Encryptor> {
-    fn operate(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, eof: bool) -> Result<BufferResult, SymmetricCipherError> {
+    fn operate(
+        &mut self,
+        input: &mut RefReadBuffer,
+        output: &mut RefWriteBuffer,
+        eof: bool,
+    ) -> Result<BufferResult, SymmetricCipherError> {
         self.encrypt(input, output, eof)
     }
 }
 
 impl CryptoOperator for Box<dyn Decryptor> {
-    fn operate(&mut self, input: &mut RefReadBuffer, output: &mut RefWriteBuffer, eof: bool) -> Result<BufferResult, SymmetricCipherError> {
+    fn operate(
+        &mut self,
+        input: &mut RefReadBuffer,
+        output: &mut RefWriteBuffer,
+        eof: bool,
+    ) -> Result<BufferResult, SymmetricCipherError> {
         self.decrypt(input, output, eof)
     }
 }
@@ -34,7 +49,7 @@ fn operate(mut operator: impl CryptoOperator, content: &[u8]) -> Vec<u8> {
             Ok(BufferResult::BufferUnderflow) => break,
             _ => {}
         }
-    };
+    }
 
     output_buffer.take_read_buffer().take_remaining().to_vec()
 }

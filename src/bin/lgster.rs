@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use std::error::Error;
-use std::time::Duration;
 use std::thread::sleep;
+use std::time::Duration;
 
 use lgster::cli::{generate_command_definitions, get_parameters};
 use lgster::comm::send_command;
@@ -19,17 +19,31 @@ fn main() -> Result<(), Box<dyn Error>> {
         .expect("Invalid command");
 
     let target_address = params.host.unwrap();
-    let salt: [u8; 16] = params.salt.0.bytes[..].try_into().expect("Invalid salt size. Should be 16 bytes.");
+    let salt: [u8; 16] = params.salt.0.bytes[..]
+        .try_into()
+        .expect("Invalid salt size. Should be 16 bytes.");
     for action_to_run in command_actions.1 {
         let action_to_run = action_to_run.replace("{}", &params.command_action_parameters[0]);
-        let response = match send_command(&target_address, params.port, &params.keycode, &salt, action_to_run) {
+        let response = match send_command(
+            &target_address,
+            params.port,
+            &params.keycode,
+            &salt,
+            action_to_run,
+        ) {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("{}", e);
                 return Ok(());
             }
         };
-        println!("{}", response.chars().take_while(|c| *c != '\n').collect::<String>());
+        println!(
+            "{}",
+            response
+                .chars()
+                .take_while(|c| *c != '\n')
+                .collect::<String>()
+        );
         sleep(Duration::from_millis(200));
     }
     Ok(())
