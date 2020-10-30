@@ -1,0 +1,11 @@
+{
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "git.ignoreLimitWarning": true,
+    "rust-analyzer.completion.postfix.enable": false,
+    "rust-analyzer.inlayHints.parameterHints": false,
+    "rust-analyzer.inlayHints.typeHints": false,
+    "editor.acceptSuggestionOnEnter": "on"
+}

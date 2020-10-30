@@ -1,0 +1,11 @@
+[package]
+name = "lgster"
+more = "Pronounced LoG-ster. CLI for sending IP Control commands to LG TVs."
+version = "0.1.0"
+authors = ['Mateus "Doodad" Medeiros']
+edition = "2018"
+
+[dependencies]
+clap = "2.33.0"
+rand = "0.7.3"
+rust-crypto = "0.2.36"
