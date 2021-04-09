@@ -23,7 +23,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         .try_into()
         .expect("Invalid salt size. Should be 16 bytes.");
     for action_to_run in command_actions.1 {
-        let action_to_run = action_to_run.replace("{}", &params.command_action_parameters[0]);
+        // TODO: test first if the command has parameters to give friendly error
+
+        let action_to_run = match &params.command_action_parameters.as_slice() {
+            [] => action_to_run.to_string(),
+            [el] => action_to_run.replace("{}", el),
+            _ => panic!("Not implemented") // TODO: think about how to generically treat multiple patterns
+        };
+
         let response = match send_command(
             &target_address,
             params.port,

@@ -227,12 +227,10 @@ impl Parameters<'_> {
             .find(|c| c.command_name == command_name)
             .expect("Missing command def. This should never happen!");
 
-        // this is safe to unwrap because if it is not used, it will be an empty vec, but not an error
-        let command_action_parameters: Vec<String> = subcommand_matches
-            .values_of("parameters")
-            .unwrap()
-            .map(String::from)
-            .collect();
+        let command_action_parameters = match subcommand_matches.values_of("parameters") {
+            Some(e) => e.map(String::from).collect::<Vec<String>>(),
+            None => vec![]
+        };
 
         Ok(Parameters {
             keycode,
