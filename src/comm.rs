@@ -2,7 +2,6 @@ use rand::Rng;
 use std::convert::TryInto;
 use std::error::Error;
 use std::fmt;
-use std::io;
 
 use crate::cli::FixedSizeByteSequenceParameter;
 use crate::crypto::{
@@ -59,9 +58,6 @@ pub fn send_command(
 
     let response = match network::send_and_receive_tcp_message((host, port), &encrypted_message) {
         Ok(response_bytes) => response_bytes,
-        Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
-            return Err(Box::new(CommunicationError::InvalidCommand(command)))
-        }
         Err(e) => return Err(Box::new(e)),
     };
     let (encrypted_response_iv, encrypted_response_message) = response.split_at(16);

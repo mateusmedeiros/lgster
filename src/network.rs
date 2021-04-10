@@ -48,10 +48,17 @@ pub fn send_and_receive_tcp_message(
     tcp_stream.set_read_timeout(Some(Duration::from_millis(100)))?;
 
     loop {
+        // NOTE: Unix-like systems will raise WouldBlock while Windows
+        //   will raise TimedOut when our read_timeout is passed
+        //   both in our context will mean we got our response
+        //   see: https://git.io/JOfSZ
         match tcp_stream.read(&mut response[bytes_read..bytes_read + 16]) {
             Ok(16) => bytes_read += 16,
+
             Ok(_) => break,
             Err(e) if e.kind() == ErrorKind::WouldBlock => break,
+            Err(e) if e.kind() == ErrorKind::TimedOut => break,
+
             Err(e) => return Err(e),
         }
     }
