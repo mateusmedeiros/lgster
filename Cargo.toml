@@ -1,11 +1,27 @@
 [package]
 name = "lgster"
-more = "Pronounced LoG-ster. CLI for sending IP Control commands to LG TVs."
+description = "Pronounced LoG-ster. CLI for sending IP Control commands to LG TVs."
 version = "0.1.0"
 authors = ['Mateus "Doodad" Medeiros']
 edition = "2018"
 
 [dependencies]
 clap = "2.33.0"
+log = "0.4.11"
 rand = "0.7.3"
 rust-crypto = "0.2.36"
+cgi = { version = "0.6", optional = true }
+http = { version = "0.2.4", optional = true }
+
+[features]
+cgi-feature = ["cgi", "http"]
+
+[[bin]]
+name = "lgster"
+
+[[bin]]
+name = "lgster-wake"
+
+[[bin]]
+name = "lgster-cgi"
+required-features = ["cgi-feature"]
